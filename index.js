@@ -1,12 +1,20 @@
 const express = require('express');
 const superagent = require('superagent');
 const bodyParser = require("body-parser");
+const checkSlackMessageSignature = require('./signing'); 
 
 const app = express();
 
-app.use(bodyParser.urlencoded());
+var rawBodySaver = function (req, res, buf, encoding) {
+  if (buf && buf.length) {
+    req.rawBody = buf.toString(encoding || 'utf8');
+  }
+}
 
-app.post('/slack/command/stats', [function(req,res){
+app.use(bodyParser.urlencoded({ verify: rawBodySaver}));
+
+
+app.post('/slack/command/stats', [checkSlackMessageSignature, function(req,res){
   const slackReqObj = req.body;
   const packageJson = require('./package.json');
 
